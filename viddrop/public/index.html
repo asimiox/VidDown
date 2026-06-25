@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VidDrop — Download anything</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #F7F7F5;
+      --surface:  #FFFFFF;
+      --border:   #E4E4E0;
+      --text:     #1A1A18;
+      --muted:    #7A7A74;
+      --accent:   #2563EB;
+      --accent-h: #1D4ED8;
+      --success:  #16A34A;
+      --danger:   #DC2626;
+      --radius:   10px;
+    }
+
+    html { font-size: 16px; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo span { color: var(--accent); }
+    .nav-badge {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 3px 9px;
+      border-radius: 99px;
+    }
+
+    /* HERO */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 72px 24px 48px;
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    /* PLATFORMS */
+    .platforms {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+    .platform-chip {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 99px;
+    }
+
+    /* INPUT CARD */
+    .input-card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 6px 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .input-card input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: transparent;
+    }
+    .input-card input::placeholder { color: var(--muted); }
+    .fetch-btn {
+      flex-shrink: 0;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .fetch-btn:hover { background: var(--accent-h); }
+    .fetch-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .fetch-btn svg { width: 14px; height: 14px; }
+
+    /* SPINNER */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* STATUS */
+    .status {
+      margin-top: 14px;
+      font-size: 0.83rem;
+      min-height: 20px;
+      text-align: center;
+    }
+    .status.error { color: var(--danger); }
+    .status.info  { color: var(--muted); }
+
+    /* RESULT SECTION */
+    .result-section {
+      margin-top: 40px;
+      width: 100%;
+      display: none;
+    }
+
+    .video-meta {
+      display: flex;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .video-thumb {
+      width: 96px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: var(--border);
+    }
+    .thumb-placeholder {
+      width: 96px;
+      height: 60px;
+      border-radius: 6px;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--muted);
+      font-size: 1.5rem;
+    }
+    .video-info { flex: 1; min-width: 0; }
+    .video-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .video-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* FORMAT GROUPS */
+    .format-group { margin-bottom: 24px; }
+    .group-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .formats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 8px;
+    }
+    .format-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+    .format-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+      transform: translateY(-1px);
+    }
+    .format-card.downloading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .format-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .format-res {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .format-ext {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .format-size {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .dl-icon {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .format-card:hover .dl-icon { opacity: 1; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 99px;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 99;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 48px 16px 32px; }
+      .formats-grid { grid-template-columns: 1fr 1fr; }
+      .video-meta { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">Vid<span>Drop</span></a>
+  <span class="nav-badge">1000+ platforms</span>
+</nav>
+
+<main class="hero">
+  <p class="eyebrow">Free · Fast · No signup</p>
+  <h1>Download <em>any</em> video,<br>any quality.</h1>
+  <p class="subtitle">Paste a link from YouTube, TikTok, Instagram, Twitter, and 1000+ more. Pick your quality and save.</p>
+
+  <div class="platforms">
+    <span class="platform-chip">YouTube</span>
+    <span class="platform-chip">TikTok</span>
+    <span class="platform-chip">Instagram</span>
+    <span class="platform-chip">Twitter / X</span>
+    <span class="platform-chip">Facebook</span>
+    <span class="platform-chip">Vimeo</span>
+    <span class="platform-chip">Reddit</span>
+    <span class="platform-chip">+ many more</span>
+  </div>
+
+  <div class="input-card">
+    <svg width="16" height="16" fill="none" stroke="#7A7A74" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+    </svg>
+    <input id="urlInput" type="url" placeholder="Paste video URL here…" autocomplete="off" spellcheck="false" />
+    <button class="fetch-btn" id="fetchBtn" onclick="fetchInfo()">
+      <span id="btnText">Fetch</span>
+      <div class="spinner" id="btnSpinner"></div>
+    </button>
+  </div>
+  <p class="status info" id="statusMsg"></p>
+
+  <div class="result-section" id="resultSection">
+    <div class="video-meta" id="videoMeta"></div>
+    <div id="formatsContainer"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<footer>VidDrop uses yt-dlp under the hood. Respect copyright and platform terms of service.</footer>
+
+<script>
+  const API_BASE = "/api";
+
+  const urlInput = document.getElementById("urlInput");
+  const fetchBtn = document.getElementById("fetchBtn");
+  const btnText = document.getElementById("btnText");
+  const btnSpinner = document.getElementById("btnSpinner");
+  const statusMsg = document.getElementById("statusMsg");
+  const resultSection = document.getElementById("resultSection");
+  const videoMeta = document.getElementById("videoMeta");
+  const formatsContainer = document.getElementById("formatsContainer");
+
+  urlInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") fetchInfo();
+  });
+
+  function setLoading(on) {
+    fetchBtn.disabled = on;
+    btnText.style.display = on ? "none" : "inline";
+    btnSpinner.style.display = on ? "block" : "none";
+  }
+
+  function showStatus(msg, type = "info") {
+    statusMsg.textContent = msg;
+    statusMsg.className = `status ${type}`;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2800);
+  }
+
+  function fmtDuration(secs) {
+    if (!secs) return "";
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return h > 0
+      ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`
+      : `${m}:${String(s).padStart(2,"0")}`;
+  }
+
+  async function fetchInfo() {
+    const url = urlInput.value.trim();
+    if (!url) { showStatus("Paste a video URL first.", "error"); return; }
+
+    setLoading(true);
+    showStatus("Fetching video info…", "info");
+    resultSection.style.display = "none";
+
+    try {
+      const res = await fetch(`${API_BASE}/info?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+
+      if (!res.ok) { showStatus(data.error || "Something went wrong.", "error"); return; }
+
+      renderMeta(data);
+      renderFormats(data.formats, url);
+      resultSection.style.display = "block";
+      showStatus("", "info");
+
+    } catch (err) {
+      showStatus("Network error. Is the backend running?", "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderMeta(data) {
+    const dur = fmtDuration(data.duration);
+    videoMeta.innerHTML = data.thumbnail
+      ? `<img class="video-thumb" src="${data.thumbnail}" alt="thumbnail" onerror="this.style.display='none'" />`
+      : `<div class="thumb-placeholder">▶</div>`;
+
+    videoMeta.innerHTML += `
+      <div class="video-info">
+        <div class="video-title">${escHtml(data.title)}</div>
+        <div class="video-sub">
+          ${data.uploader ? escHtml(data.uploader) + " · " : ""}
+          ${data.platform || ""}
+          ${dur ? " · " + dur : ""}
+        </div>
+      </div>`;
+  }
+
+  function renderFormats(formats, videoUrl) {
+    if (!formats || formats.length === 0) {
+      formatsContainer.innerHTML = `<p style="color:var(--muted);font-size:.875rem">No downloadable formats found.</p>`;
+      return;
+    }
+
+    const groups = {
+      "video+audio": [],
+      "video": [],
+      "audio": [],
+    };
+    formats.forEach(f => (groups[f.kind] || groups["video+audio"]).push(f));
+
+    const labels = {
+      "video+audio": "Video + Audio",
+      "video": "Video only",
+      "audio": "Audio only",
+    };
+
+    let html = "";
+    for (const [kind, fmts] of Object.entries(groups)) {
+      if (fmts.length === 0) continue;
+      html += `<div class="format-group">
+        <div class="group-label">${labels[kind]}</div>
+        <div class="formats-grid">`;
+
+      fmts.forEach(f => {
+        html += `<div class="format-card" onclick="downloadFormat('${escAttr(videoUrl)}','${escAttr(f.format_id)}','${escAttr(f.ext)}', this)">
+          <div class="format-top">
+            <span class="format-res">${escHtml(f.label)}</span>
+            <span class="format-ext">${escHtml(f.ext)}</span>
+          </div>
+          ${f.size ? `<div class="format-size">${escHtml(f.size)}</div>` : ""}
+          <svg class="dl-icon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    }
+
+    formatsContainer.innerHTML = html;
+  }
+
+  function downloadFormat(videoUrl, formatId, ext, cardEl) {
+    cardEl.classList.add("downloading");
+    showToast("Starting download…");
+
+    const link = document.createElement("a");
+    link.href = `${API_BASE}/download?url=${encodeURIComponent(videoUrl)}&format_id=${encodeURIComponent(formatId)}&ext=${encodeURIComponent(ext)}`;
+    link.download = "";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => cardEl.classList.remove("downloading"), 3000);
+  }
+
+  function escHtml(str) {
+    if (!str) return "";
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function escAttr(str) {
+    if (!str) return "";
+    return String(str).replace(/'/g,"\\'").replace(/"/g,"&quot;");
+  }
+</script>
+</body>
+</html>
